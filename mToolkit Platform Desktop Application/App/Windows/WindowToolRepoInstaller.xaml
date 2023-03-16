@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:mToolkitPlatformDesktopLauncher.App.Windows"
         mc:Ignorable="d"
-        Title="WindowToolRepoInstaller" Height="344" Width="517" ResizeMode="NoResize"
+        Title="Tool Installer" Height="344" Width="517" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
