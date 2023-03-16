@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>mToolkitPlatformExampleToolComponent</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>mToolkitPlatformExampleToolComponent</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Micah Toolkit Platform Component Library\mToolkit Platform Component Library.csproj" />
+  </ItemGroup>
+
+</Project>
