@@ -23,6 +23,7 @@ namespace mToolkitPlatformDesktopLauncher.App
     {
         public static readonly CallbackToolDictionary<string, mTool> Tools = new CallbackToolDictionary<string, mTool>();
         private static readonly Dictionary<string, mToolApplicationContext> ToolDLLContexts = new Dictionary<string, mToolApplicationContext>();
+        public static readonly string ToolDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Tools");
 
         /// <summary>
         /// Searches the Tools directory for subdirectories containing a tool.config file and a DLL with the same name as the InternalName attribute in the tool.config file.
@@ -32,20 +33,19 @@ namespace mToolkitPlatformDesktopLauncher.App
         public static void LoadTools(Window window)
         {
             // Construct the path to the Tools directory
-            string directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Tools");
 
             // Check if the directory is null or empty
-            if (string.IsNullOrEmpty(directory))
+            if (string.IsNullOrEmpty(ToolDirectory))
                 return;
 
             // Create the Tools directory if it does not exist
-            if (!Directory.Exists(directory))
+            if (!Directory.Exists(ToolDirectory))
             {
-                Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(ToolDirectory);
             }
 
             // Get the subdirectories of the Tools directory
-            string[] toolDirectories = Directory.GetDirectories(directory);
+            string[] toolDirectories = Directory.GetDirectories(ToolDirectory);
 
             // Loop through each subdirectory
             foreach (string toolDirectory in toolDirectories)

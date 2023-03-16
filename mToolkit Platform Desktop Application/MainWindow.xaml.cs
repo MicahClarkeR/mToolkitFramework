@@ -1,7 +1,9 @@
 ﻿using mToolkitPlatformComponentLibrary;
 using mToolkitPlatformDesktopLauncher.App;
+using mToolkitPlatformDesktopLauncher.App.Windows;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,12 +17,20 @@ namespace mToolkitPlatformDesktopLauncher
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static MainWindow? Current = null;
+
         public MainWindow()
         {
+            Current = this;
             InitializeComponent();
 
             Toolkit.Tools.AddCreationCallback((s, m) => AddTool(m));
             Toolkit.LoadTools(this);
+
+            if (ToolsTabControl.Items.Count == 0)
+            {
+                UpdateContextMenu(null, null);
+            }
         }
 
         /// <summary>
@@ -83,21 +93,36 @@ namespace mToolkitPlatformDesktopLauncher
             Title = $"{tab.Header} - mTool Framework";
         }
 
-        private void UpdateContextMenu(UserControl control, mTool tool)
+        private void UpdateContextMenu(UserControl? control, mTool? tool)
         {
             ContextMenu = new ContextMenu();
 
-            if (control.ContextMenu != null)
+            if (control?.ContextMenu != null)
             {
                 foreach (MenuItem item in control.ContextMenu.Items)
                 {
                     ContextMenu.Items.Add(item);
                 }
+
+                ContextMenu.Items.Add(new Separator());
             }
 
-            ContextMenu.Items.Add(new Separator());
-            // ContextMenu.Items.Add(CreateMenuItem("Unload Tool", (sender, e) => UnloadTool(tool)));
-            ContextMenu.Items.Add(CreateMenuItem("View Tool Log", (sender, e) => tool.OpenLog()));
+
+            MenuItem toolSubmenu = new MenuItem()
+            {
+                Header = "Framework Menu"
+            };
+            toolSubmenu.Items.Add(CreateMenuItem("Restart mToolkit Platform", (sender, e) => mToolkitPlatform.Desktop.App.Restart()));
+            toolSubmenu.Items.Add(CreateMenuItem("Install Tool From Repo", (sender, e) => new WindowToolRepoInstaller().ShowDialog()));
+
+            if (tool != null)
+            {
+                toolSubmenu.Items.Add(new Separator());
+                // toolSubmenu.Items.Add(CreateMenuItem("Unload Tool", (sender, e) => UnloadTool(tool)));
+                toolSubmenu.Items.Add(CreateMenuItem("View Tool Log", (sender, e) => tool.OpenLog()));
+            }
+
+            ContextMenu.Items.Add(toolSubmenu);
         }
 
         private void UnloadTool(mTool tool)
