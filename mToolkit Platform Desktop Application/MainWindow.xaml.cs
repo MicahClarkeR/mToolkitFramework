@@ -73,11 +73,10 @@ namespace mToolkitPlatformDesktopLauncher
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
+            control.HorizontalAlignment = HorizontalAlignment.Stretch;
+            control.VerticalAlignment = VerticalAlignment.Stretch;
+
             grid.Children.Add(control);
-            Grid.SetRow(control, 0);
-            Grid.SetColumn(control, 0);
-            Grid.SetRowSpan(control, 1);
-            Grid.SetColumnSpan(control, 1);
 
             tool.Log.Debug("Created and set in Main Window grid.");
 
