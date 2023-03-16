@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WpfLibrary1\mToolkit Platform Example Tool Component.csproj" />
+    <ProjectReference Include="..\mToolkit Platform Example Tool Component\mToolkit Platform Example Tool Component.csproj" />
   </ItemGroup>
 
 </Project>

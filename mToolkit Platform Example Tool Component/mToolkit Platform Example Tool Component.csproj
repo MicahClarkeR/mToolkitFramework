@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Micah Toolkit Platform Component Library\mToolkit Platform Component Library.csproj" />
+    <ProjectReference Include="..\mToolkit Platform Component Library\mToolkit Platform Component Library.csproj" />
   </ItemGroup>
 
 </Project>

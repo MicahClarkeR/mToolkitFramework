@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mToolkit Platform Desktop Launcher", "Micah Toolkit Platform\mToolkit Platform Desktop Launcher.csproj", "{D792D095-0198-4D6B-9AD2-4144190CA0BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mToolkit Platform Desktop Launcher", "mToolkit Platform Desktop Application\mToolkit Platform Desktop Launcher.csproj", "{D792D095-0198-4D6B-9AD2-4144190CA0BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mToolkit Platform Component Library", "Micah Toolkit Platform Component Library\mToolkit Platform Component Library.csproj", "{74B3EEAC-D04A-4C64-825E-A572CB74CD04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mToolkit Platform Component Library", "mToolkit Platform Component Library\mToolkit Platform Component Library.csproj", "{74B3EEAC-D04A-4C64-825E-A572CB74CD04}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mToolkit Platform Example Tool Component", "mToolkit Platform Example Tool Component\mToolkit Platform Example Tool Component.csproj", "{F7D28699-07AB-40F5-AADA-7314F87A8012}"
 EndProject
