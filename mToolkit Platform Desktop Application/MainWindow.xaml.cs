@@ -113,7 +113,8 @@ namespace mToolkitPlatformDesktopLauncher
                 Header = "Framework Menu"
             };
             toolSubmenu.Items.Add(CreateMenuItem("Restart mToolkit Platform", (sender, e) => mToolkitPlatform.Desktop.App.Restart()));
-            toolSubmenu.Items.Add(CreateMenuItem("Install Tool From Repo", (sender, e) => new WindowToolRepoInstaller().ShowDialog()));
+            toolSubmenu.Items.Add(new Separator());
+            toolSubmenu.Items.Add(CreateMenuItem("Install Tool From Repo...", (sender, e) => new WindowToolRepoInstaller().ShowDialog()));
 
             if (tool != null)
             {
