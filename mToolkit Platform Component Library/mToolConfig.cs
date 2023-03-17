@@ -56,7 +56,7 @@ namespace mToolkitPlatformComponentLibrary
 
             if (variable != null)
             {
-                value = variable.Value;
+                value = variable.Attributes().FirstOrDefault(v => v.Name == "value")?.Value;
                 return true;
             }
 
@@ -113,38 +113,34 @@ namespace mToolkitPlatformComponentLibrary
             // Initialize the output parameter.
             config = null;
 
-            // Search for tool directories in the specified directory and its subdirectories.
-            foreach (string toolDirectory in Directory.GetDirectories(directory))
-            {
-                // Get a list of files in the tool directory.
-                string[] files = Directory.GetFiles(toolDirectory);
+            // Get a list of files in the tool directory.
+            string[] files = Directory.GetFiles(directory);
 
-                // Search for the tool configuration file in the list of files.
-                XElement? toolConfig = files
-                    .Select(f =>
-                    {
-                        FileInfo fi = new FileInfo(f);
-
-                        // Check if the file extension is "config" and the file name is "tool".
-                        if (fi.Extension == "config" && fi.Name == "tool")
-                        {
-                            // Read the contents of the tool configuration file and parse it as an XElement object.
-                            string contents = File.ReadAllText(f);
-                            XElement result = XElement.Parse(contents);
-
-                            return result;
-                        }
-
-                        return null;
-                    })
-                    .FirstOrDefault(x => x != null);
-
-                // If the tool configuration file was found, set the output parameter and exit the method.
-                if (toolConfig != null)
+            // Search for the tool configuration file in the list of files.
+            XElement? toolConfig = files
+                .Select(f =>
                 {
-                    config = toolConfig;
-                    return;
-                }
+                    FileInfo fi = new FileInfo(f);
+
+                    // Check if the file extension is "config" and the file name is "tool".
+                    if (fi.Name == "tool.config")
+                    {
+                        // Read the contents of the tool configuration file and parse it as an XElement object.
+                        string contents = File.ReadAllText(f);
+                        XElement result = XElement.Parse(contents);
+
+                        return result;
+                    }
+
+                    return null;
+                })
+                .FirstOrDefault(x => x != null);
+
+            // If the tool configuration file was found, set the output parameter and exit the method.
+            if (toolConfig != null)
+            {
+                config = toolConfig;
+                return;
             }
         }
 

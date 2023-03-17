@@ -22,7 +22,7 @@ namespace mToolkitPlatformDesktopLauncher.App
     internal class Toolkit
     {
         public static readonly CallbackToolDictionary<string, mTool> Tools = new CallbackToolDictionary<string, mTool>();
-        private static readonly Dictionary<string, mToolApplicationContext> ToolDLLContexts = new Dictionary<string, mToolApplicationContext>();
+        private static readonly Dictionary<string, AssemblyLoadContext> ToolDLLContexts = new Dictionary<string, AssemblyLoadContext>();
         public static readonly string ToolDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Tools");
 
         /// <summary>
@@ -73,10 +73,10 @@ namespace mToolkitPlatformDesktopLauncher.App
 
         private static mTool? CreateToolFromDLL(string dllFile)
         {
-            using (var stream = File.OpenRead(dllFile))
+            try
             {
-                mToolApplicationContext context = new mToolApplicationContext();
-                Assembly assembly = context.LoadFromStream(stream);
+                // Load the assembly using the default assembly loading context
+                Assembly assembly = Assembly.LoadFrom(dllFile);
 
                 // Find the first type that is a subclass of mTool
                 Type toolType = assembly.GetTypes().FirstOrDefault(type => type.IsSubclassOf(typeof(mTool)));
@@ -93,10 +93,13 @@ namespace mToolkitPlatformDesktopLauncher.App
                         // Create a new instance of the Tool class and cast it to the Tool type
                         string guid = Guid.NewGuid().ToString();
                         mTool tool = (mTool)constructor.Invoke(new object[] { guid, Path.GetDirectoryName(dllFile) });
-                        ToolDLLContexts.Add(tool.GUID, context);
                         return tool;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception or display an error message
             }
 
             return null;
@@ -104,7 +107,7 @@ namespace mToolkitPlatformDesktopLauncher.App
 
         public static void UnloadTool(mTool tool)
         {
-            mToolApplicationContext? contexts = ToolDLLContexts[tool.GUID];
+            AssemblyLoadContext? contexts = ToolDLLContexts[tool.GUID];
 
             if(contexts != null)
             {

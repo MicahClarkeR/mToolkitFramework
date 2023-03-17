@@ -96,7 +96,7 @@ namespace mToolkitPlatformDesktopLauncher
         {
             ContextMenu = new ContextMenu();
 
-            if (control?.ContextMenu != null)
+            /*if (control?.ContextMenu != null)
             {
                 foreach (MenuItem item in control.ContextMenu.Items)
                 {
@@ -104,7 +104,7 @@ namespace mToolkitPlatformDesktopLauncher
                 }
 
                 ContextMenu.Items.Add(new Separator());
-            }
+            }*/
 
 
             MenuItem toolSubmenu = new MenuItem()
