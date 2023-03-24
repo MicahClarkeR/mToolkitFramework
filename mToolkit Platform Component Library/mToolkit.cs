@@ -1,25 +1,14 @@
-﻿using Microsoft.Win32;
-using mToolkitPlatformComponentLibrary;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Printing;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Navigation;
-using System.Xml.Linq;
 
-namespace mToolkitPlatformDesktopLauncher.App
+namespace mToolkitPlatformComponentLibrary
 {
-    internal class Toolkit
+    /// <summary>
+    /// A class that provides functionality for loading, unloading, and managing mTool instances.
+    /// </summary>
+    public class mToolkit
     {
         public static readonly CallbackToolDictionary<string, mTool> Tools = new CallbackToolDictionary<string, mTool>();
         private static readonly Dictionary<string, AssemblyLoadContext> ToolDLLContexts = new Dictionary<string, AssemblyLoadContext>();
@@ -32,8 +21,6 @@ namespace mToolkitPlatformDesktopLauncher.App
         /// <param name="window">The main window of the application.</param>
         public static void LoadTools(Window window)
         {
-            // Construct the path to the Tools directory
-
             // Check if the directory is null or empty
             if (string.IsNullOrEmpty(ToolDirectory))
                 return;
@@ -60,26 +47,41 @@ namespace mToolkitPlatformDesktopLauncher.App
                     try
                     {
                         if (tool != null)
+                        {
+                            tool.GUID = new FileInfo(dllFile).Directory.FullName;
                             Tools.Add(tool.GUID, tool);
+                            break;
+                        }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
-                        tool?.Log.Error(ex);
-                        MessageBox.Show("Critical error encountered when creating mTool UI, please check log.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        tool?.DumpTool(ex.Message);
+                        tool?.CurrentLog.Error(ex);
+                        MessageBox.Show("Critical error encountered when creating mTool UI, please check log.\n" + dllFile, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Creates an mTool instance from the specified DLL file.
+        /// </summary>
+        /// <param name="dllFile">The path to the DLL file.</param>
+        /// <returns>An mTool instance if successful, or null if there was an error.</returns>
         private static mTool? CreateToolFromDLL(string dllFile)
         {
             try
             {
-                // Load the assembly using the default assembly loading context
-                Assembly assembly = Assembly.LoadFrom(dllFile);
+                Type toolType = null;
+                try
+                {
+                    // Load the assembly using the default assembly loading context
+                    Assembly assembly = Assembly.LoadFrom(dllFile);
 
-                // Find the first type that is a subclass of mTool
-                Type toolType = assembly.GetTypes().FirstOrDefault(type => type.IsSubclassOf(typeof(mTool)));
+                    // Find the first type that is a subclass of mTool
+                    toolType = assembly.GetTypes().FirstOrDefault(type => type.IsSubclassOf(typeof(mTool)));
+                }
+                catch (Exception ex) { }
 
                 if (toolType != null)
                 {
@@ -99,25 +101,46 @@ namespace mToolkitPlatformDesktopLauncher.App
             }
             catch (Exception ex)
             {
-                // Handle the exception or display an error message
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return null;
         }
 
+        /// <summary>
+        /// Unloads all loaded mTools.
+        /// </summary>
+        public static void UnloadTools()
+        {
+            foreach (mTool tool in Tools.Values.ToArray())
+            {
+                Tools.Remove(tool.GUID);
+                // tool.CurrentWorkspace.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Unloads a specific mTool.
+        /// </summary>
+        /// <param name="tool">The mTool to unload.</param>
         public static void UnloadTool(mTool tool)
         {
             AssemblyLoadContext? contexts = ToolDLLContexts[tool.GUID];
 
-            if(contexts != null)
+            if (contexts != null)
             {
-                contexts.Unload();
+                // contexts.Unload();
                 ToolDLLContexts.Remove(tool.GUID);
                 Tools.Remove(tool.GUID);
                 tool.Dispose();
             }
         }
 
+        /// <summary>
+        /// Reloads an mTool instance.
+        /// </summary>
+        /// <param name="tool">The mTool instance to reload.</param>
+        /// <returns>The reloaded mTool instance, or null if there was an error.</returns>
         public static mTool? Reload(mTool tool)
         {
             string path = null;
@@ -143,7 +166,7 @@ namespace mToolkitPlatformDesktopLauncher.App
                 }
                 catch (Exception ex)
                 {
-                    tool?.Log.Error(ex);
+                    newTool.CurrentLog.Error(ex);
                     MessageBox.Show("Critical error encountered when creating mTool UI, please check log.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return null;
                 }
@@ -152,37 +175,44 @@ namespace mToolkitPlatformDesktopLauncher.App
             return newTool;
         }
 
-        internal class CallbackToolDictionary<TKey, TValue> : Dictionary<TKey, TValue> where TValue : mTool
+        /// <summary>
+        /// A custom dictionary class that allows for registering creation callbacks when mTool instances are added or removed.
+        /// </summary>
+        public class CallbackToolDictionary<TKey, TValue> : Dictionary<TKey, TValue> where TValue : mTool
         {
             private List<Action<TKey, mTool>> CreationCallbacks = new List<Action<TKey, mTool>>();
             public readonly Dictionary<string, UserControl> UIs = new Dictionary<string, UserControl>();
 
             public new void Add(TKey key, TValue value)
             {
-                value.Log.Debug($"Adding to Toolkit dictionary.");
+                value.CurrentLog.Debug($"Adding to Toolkit dictionary.");
                 base.Add(key, value);
 
-                value.Log.Debug($"Registering and creating UI.");
+                value.CurrentLog.Debug($"Registering and creating UI.");
                 // Add a new UI to the UIs dictionary
                 UIs.Add(value.GUID, value.Create());
 
-                value.Log.Debug($"Cycling through post-creation callbacks.");
+                value.CurrentLog.Debug($"Cycling through post-creation callbacks.");
                 CreationCallbacks.ForEach((e) => e(key, value));
             }
 
             public new void Remove(TKey key)
             {
                 mTool tool = this[key];
-                tool.Log.Debug($"Removing from Toolkit dictionary.");
+                tool.CurrentLog.Debug($"Removing from Toolkit dictionary.");
                 base.Remove(key);
 
-                tool.Log.Debug($"De-registering UI.");
+                tool.CurrentLog.Debug($"De-registering UI.");
                 CreationCallbacks.Clear();
 
-                // Add a new UI to the UIs dictionary
+                // Remove the UI from the UIs dictionary
                 UIs.Remove(tool.GUID);
             }
 
+            /// <summary>
+            /// Adds a creation callback to be called when mTool instances are added or removed.
+            /// </summary>
+            /// <param name="callback">The callback to add.</param>
             public void Update(TKey key, TValue value)
             {
                 mTool old = this[key];

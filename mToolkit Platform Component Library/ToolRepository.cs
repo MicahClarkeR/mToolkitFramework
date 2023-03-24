@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
+﻿using System.IO.Compression;
 using System.Reflection;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace mToolkitPlatformDesktopLauncher.App
+namespace mToolkitPlatformComponentLibrary
 {
     /// <summary>
     /// Provides functionality to manage tools in the tool repository.
     /// </summary>
-    internal class ToolRepository
+    public class ToolRepository
     {
         /// <summary>
         /// The directory where the tool repository is located.
@@ -48,9 +41,9 @@ namespace mToolkitPlatformDesktopLauncher.App
         /// </summary>
         private static void EnsureToolsDirectoryExists()
         {
-            if (!Directory.Exists(Toolkit.ToolDirectory))
+            if (!Directory.Exists(mToolkit.ToolDirectory))
             {
-                Directory.CreateDirectory(Toolkit.ToolDirectory);
+                Directory.CreateDirectory(mToolkit.ToolDirectory);
             }
         }
 
@@ -62,7 +55,7 @@ namespace mToolkitPlatformDesktopLauncher.App
         /// <returns>A unique directory path for the tool.</returns>
         private static string GetUniqueToolDirectoryPath(string zipFile, string? folderName)
         {
-            string extractPath = Path.Combine(Toolkit.ToolDirectory, Path.GetFileNameWithoutExtension(zipFile));
+            string extractPath = Path.Combine(mToolkit.ToolDirectory, Path.GetFileNameWithoutExtension(zipFile));
 
             if (folderName != null)
             {
