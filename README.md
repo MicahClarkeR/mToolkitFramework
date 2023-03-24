@@ -1,33 +1,41 @@
-# mToolkit Framework
+mToolkit Framework
+==================
 
-The mToolkit Framework is a versatile and portable software development framework designed to facilitate the creation, deployment, and management of modular tools and applications. It consists of three main components: the component library, the desktop launcher, and Tools.
+mToolkit Framework is an open-source, modular software development solution designed to facilitate the creation, deployment, and management of portable and self-contained tools and applications. It aims to empower developers to quickly develop custom tools for their personal use-cases and to share those tools with the community via open-source git repositories. With the mToolkit Framework, you can share tools like documents, turning software into shareable files that can be easily installed and utilized by others.
 
-- **Component Library:** This is a collection of classes and systems essential for the operation of Tools. It provides functionality such as managing workspaces for file operations, storing variables and values in a Tool Configuration file, handling complex data structures, and offering a Pipeline infrastructure for inter-tool communication.
+Features
+--------
 
-- **Desktop Launcher:** This executable application serves as the platform for loading and displaying the user interface (UI) of Tools. It also provides additional features such as installing Tools from Zip files.
+-   **Component Library**: A collection of classes and systems essential for tool operation, handling workspaces, configuration files, and inter-tool communication through the Pipeline infrastructure.
+-   **Desktop Launcher**: A platform for loading and displaying tools' user interfaces, as well as managing tool installations from zip files.
+-   **Tools**: Portable, self-contained C# and WPF-powered library classes that utilize a mTool class to create a UserControl for presenting the UI to users.
 
-- **Tools:** These are portable, self-contained C# and WPF-powered library classes that utilize a mTool class to create a UserControl for presenting the UI to users. Each Tool is designed to perform specific tasks and can interact with the desktop launcher and other Tools via the Pipeline infrastructure.
+Getting Started
+---------------
 
-The mToolkit Framework is a modular software development solution that streamlines the process of creating, deploying, and managing self-contained, portable tools and applications through its component library, desktop launcher, and Tools system. It offers a rich set of features for handling UI, file management, and communication between Tools, ensuring seamless integration and flexibility for developers.
+1.  Clone this repository to your local machine.
+2.  Open the solution in Visual Studio 2022.
+3.  Build the solution and run the Desktop Launcher application.
 
-## Portability
+Usage
+-----
 
-The mToolkit Framework offers several benefits due to its modular and portable design:
+1.  Develop your custom Tool using the mToolkit Framework's Component Library and the provided Example Tool as an WPF Class Library.
+2.  Publish your Tool through Visual Studio using the 'Portable' Target Runtime.
+3.  Share your Tool by uploading it to a git repository or directly sending the zip file to a friend.
+4.  Install and use the Tool via the Desktop Launcher by either downloading it from the git repository or opening the received zip file.
 
-- **Modularity:** The framework allows developers to create self-contained Tools that can be easily combined, extended, or reused, promoting a more organized codebase and reducing development time for complex applications.
+Contributing
+------------
 
-- **Portability:** Tools developed with the mToolkit Framework can be easily transferred between different systems or platforms, making it simpler to deploy and maintain applications across various environments.
+We welcome contributions to the mToolkit Framework! Whether you're interested in developing new tools, enhancing existing ones, or improving the framework itself, your help is appreciated. Please follow these steps to contribute:
 
-- **Scalability:** The modular design facilitates the easy addition of new Tools or the updating of existing ones without affecting the overall system. This allows the software to evolve and grow over time while minimizing potential disruptions.
+1.  Fork this repository.
+2.  Create a new branch for your changes.
+3.  Make your changes and commit them to your branch.
+4.  Submit a pull request with a description of your changes.
 
-- **Interoperability:** The Pipeline infrastructure enables seamless communication between Tools, the desktop launcher, and other components within the system, fostering collaboration and data exchange among different applications.
+License
+-------
 
-- **Simplified UI Management:** By using UserControl for presenting the UI, mToolkit Framework streamlines the process of designing and managing user interfaces for each Tool, ensuring a consistent and efficient approach to UI development.
-
-- **Streamlined File Management:** The component library's workspace system centralizes file creation, reading, and deletion operations for Tools, making it easier to maintain and organize data within the application.
-
-- **Configuration Management:** The ability to store variables, values, and complex data structures in Tool Configuration files simplifies the management of settings and preferences for each Tool, enhancing customization and adaptability.
-
-- **Easier Tool Installation:** The desktop launcher's ability to install Tools from Zip files simplifies the process of adding new Tools or updating existing ones, reducing the time and effort required for deployment.
-
-By adopting the mToolkit Framework, developers can enjoy a more efficient, flexible, and scalable development process while creating portable and modular applications with robust features for UI, file, and configuration management.
+mToolkit Framework is released under the MIT License.
