@@ -3,6 +3,7 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using mToolkitPlatformComponentLibrary;
+using mToolkitPlatformComponentLibrary.Workspace;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -16,28 +17,90 @@ using System.Xml.Linq;
 
 namespace mToolkitPlatformComponentLibrary
 {
+    /// <summary>
+    /// Represents a tool that can be used within an application.
+    /// </summary>
     public abstract class mTool : IDisposable
     {
-        public readonly ILog Log;
-        public mToolConfig Config;
-        public ToolInfo Info;
-        public DirectoryInfo ParentDirectory;
+        // Static field used to store the root path of the framework.
+        public static string FrameworkRootPath;
+
+        // Instance fields.
+        public string CurrentFrameworkRootPath;
+        public readonly ILog CurrentLog;
+        public readonly mToolConfig CurrentConfig;
+        public readonly mToolWorkspace CurrentWorkspace;
+        public readonly ToolInfo CurrentInfo;
+        public readonly DirectoryInfo CurrentParentDirectory;
         public string GUID;
-        public string Name { get { return Info.Name; } }
-        public string InternalName { get { return Info.InternalName; } }
-        public string Author { get { return Info.Author; } }
-        public string Version { get { return Info.Version; } }
-        public string Description { get { return Info.Description; } }
 
-        public mTool(string guid, string directory)
+        /// <summary>
+        /// Gets the name of the tool.
+        /// </summary>
+        public string Name { get { return CurrentInfo.Name; } }
+
+        /// <summary>
+        /// Gets the internal name of the tool.
+        /// </summary>
+        public string InternalName { get { return CurrentInfo.InternalName; } }
+
+        /// <summary>
+        /// Gets the author of the tool.
+        /// </summary>
+        public string Author { get { return CurrentInfo.Author; } }
+
+        /// <summary>
+        /// Gets the version of the tool.
+        /// </summary>
+        public string Version { get { return CurrentInfo.Version; } }
+
+        /// <summary>
+        /// Gets the description of the tool.
+        /// </summary>
+        public string Description { get { return CurrentInfo.Description; } }
+
+        /// <summary>
+        /// Initializes a new instance of the mTool class.
+        /// </summary>
+        /// <param name="guid">The GUID of the tool.</param>
+        /// <param name="directory">The directory where the tool is located.</param>
+        /// <param name="config">The configuration for the tool.</param>
+        public mTool(string guid, string directory, mToolConfig? config = null)
         {
+            // Initialize fields.
             GUID = guid;
-            ParentDirectory = new DirectoryInfo(directory);
-            Log = LogManager.GetLogger(GetToolType());
-            Info = GetInfo();
+            CurrentParentDirectory = new DirectoryInfo(directory);
+            CurrentFrameworkRootPath = FrameworkRootPath = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
+            CurrentLog = LogManager.GetLogger(GetToolType());
+            CurrentInfo = GetInfo();
+            CurrentWorkspace = new mToolWorkspace(this);
 
+            // Create log.
+            CreateLog();
+
+            // Create configuration if none was provided.
+            if (config == null)
+                config = mToolConfig.Create(this);
+
+            CurrentConfig = config;
+        }
+
+        /// <summary>
+        /// Sets the configuration for the tool.
+        /// </summary>
+        /// <param name="config">The configuration for the tool.</param>
+        public void SetConfig(mToolConfig config)
+        { }
+
+        /// <summary>
+        /// Creates the log for the tool.
+        /// </summary>
+        private void CreateLog()
+        {
+            // Namespace used for log4net.
             XNamespace log4netNs = "http://logging.apache.org/log4net/schemas/log4net.xsd";
 
+            // Create the log4net configuration.
             XElement log4netConfig = new XElement(log4netNs + "log4net",
                 new XElement(log4netNs + "appender",
                     new XAttribute("name", $"LogFileAppender"),
@@ -77,12 +140,11 @@ namespace mToolkitPlatformComponentLibrary
 
             // Initialize log4net with the configuration file
             XmlConfigurator.Configure(rootElement);
-
-            Config = new mToolConfig(this);
         }
 
         public string GetLog()
         {
+            // Get the file appender for the log file
             FileAppender appender = LogManager.GetRepository().GetAppenders().FirstOrDefault(a => a.Name == $"LogFileAppender") as FileAppender;
 
             // Read the contents of the log file
@@ -96,39 +158,59 @@ namespace mToolkitPlatformComponentLibrary
 
         public void OpenLog()
         {
+            // Get all appenders
             IAppender[] appenders = LogManager.GetRepository().GetAppenders();
+            // Find the file appender for the log file
             FileAppender appender = appenders.FirstOrDefault(a => a.Name == $"LogFileAppender") as FileAppender;
+            // Open the log file in Notepad
             Process.Start("notepad.exe", appender.File);
         }
 
         public UserControl Create()
         {
+            // Create the user interface control for the tool
             UserControl control = CreateUI();
-
             return control;
         }
 
         public string GetToolDirectory()
         {
-            return $"{ParentDirectory.FullName}";
+            // Return the full name of the tool's parent directory
+            return $"{CurrentParentDirectory.FullName}";
         }
 
-
+        /// <summary>
+        /// Called to initialize the tool.
+        /// </summary>
         public abstract void Initialise();
+
+        /// <summary>
+        /// Called to create the user interface for the tool.
+        /// </summary>
+        /// <returns>The user interface control for the tool.</returns>
         public abstract UserControl CreateUI();
 
         public virtual void Focused()
         {
-            Log.Info("Tool focused.");
+            // Log that the tool has been focused
+            CurrentLog.Info("Tool focused.");
         }
 
         public virtual void Unfocused()
         {
-            Log.Info("Tool unfocused.");
+            // Log that the tool has been unfocused
+            CurrentLog.Info("Tool unfocused.");
         }
 
+        /// <summary>
+        /// Gets the type of the tool.
+        /// </summary>
+        /// <returns>The type of the tool.</returns>
         protected abstract Type GetToolType();
 
+        /// <summary>
+        /// A class representing a variable to be included in a tool dump.
+        /// </summary>
         internal class DumpVariable
         {
             public readonly string Name, Value;
@@ -140,19 +222,26 @@ namespace mToolkitPlatformComponentLibrary
             }
         }
 
+        // This method creates an XML file containing diagnostic information about the tool.
+        // The XML file is saved in the "Dumps" subdirectory under the tool's directory.
         internal void DumpTool(string fatal, params DumpVariable[] diagnostics)
         {
+            // Get the current date and time
             string now = DateTime.Now.ToString();
+
+            // Create the root XElement for the XML file
             XElement root = new XElement("tooldump",
                                 new XAttribute("Tool", Name),
                                 new XAttribute("Created", now),
                                 new XAttribute("Version", Version));
 
+            // Add each diagnostic variable as a child XElement
             foreach (DumpVariable v in diagnostics)
             {
                 root.Add(new XElement(v.Name, v.Value));
             }
 
+            // Construct the file path for the XML file
             string dumpFile = $"{GetToolDirectory()}/Dumps/{Name}{now}.xml";
 
             // Create a new XML writer for the specified file path
@@ -162,10 +251,12 @@ namespace mToolkitPlatformComponentLibrary
                 root.WriteTo(writer);
             }
 
-            Log.Fatal(fatal);
-            Log.Fatal($"Diagnostic information has been dumped to: {dumpFile}.");
+            // Log the fatal error and the location of the diagnostic information
+            CurrentLog.Fatal(fatal);
+            CurrentLog.Fatal($"Diagnostic information has been dumped to: {dumpFile}.");
         }
 
+        // This class represents information about a tool, including its name, internal name, author, description, and version.
         public class ToolInfo
         {
             public readonly string Name;
@@ -184,13 +275,20 @@ namespace mToolkitPlatformComponentLibrary
             }
         }
 
+        // This method returns information about the tool.
         protected abstract ToolInfo GetInfo();
 
         private bool disposed = false;
 
+        // This method is called when the tool is about to be closed.
+        protected virtual void ToolClosing()
+        { }
+
         // Implement IDisposable.
         public void Dispose()
         {
+            ToolClosing();
+            CurrentWorkspace.Clear();
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -208,8 +306,7 @@ namespace mToolkitPlatformComponentLibrary
             {
                 if (disposing)
                 {
-                    Config = null;
-                    Info = null;
+                    // Dispose managed resources.
                 }
 
                 // Release unmanaged resources.
