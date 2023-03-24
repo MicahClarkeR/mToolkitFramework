@@ -1,7 +1,11 @@
-﻿using mToolkitPlatformComponentLibrary;
+﻿using mToolkitPlatform.Desktop;
+using mToolkitPlatformComponentLibrary;
 using mToolkitPlatformDesktopLauncher.App;
 using mToolkitPlatformDesktopLauncher.App.Windows;
+using mToolkitPlatformDesktopLauncher.Pipelines;
+using mToolkitPlatformDesktopLauncher.Properties;
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,20 +21,55 @@ namespace mToolkitPlatformDesktopLauncher
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Singleton instance of MainWindow.
+        /// </summary>
         private static MainWindow? Current = null;
 
+        /// <summary>
+        /// Static constructor for MainWindow. Registers the "statusbar" pipeline.
+        /// </summary>
+        static MainWindow()
+        {
+            mFrameworkApplication.Pipelines.RegisterPipeline("statusbar", new StatusbarPipeline());
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the MainWindow class.
+        /// </summary>
         public MainWindow()
         {
             Current = this;
             InitializeComponent();
 
-            Toolkit.Tools.AddCreationCallback((s, m) => AddTool(m));
-            Toolkit.LoadTools(this);
+            mToolkit.Tools.AddCreationCallback((s, m) => AddTool(m));
+            mToolkit.LoadTools(this);
 
             if (ToolsTabControl.Items.Count == 0)
             {
                 UpdateContextMenu(null, null);
             }
+
+            this.Left = Settings.Default.WindowLeft;
+            this.Top = Settings.Default.WindowTop;
+            this.Width = Settings.Default.WindowWidth;
+            this.Height = Settings.Default.WindowHeight;
+        }
+
+        /// <summary>
+        /// Handles the Window Closing event. Saves the window position and size, and unloads the tools.
+        /// </summary>
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            // Save window position and size to the settings
+            Settings.Default.WindowLeft = this.Left;
+            Settings.Default.WindowTop = this.Top;
+            Settings.Default.WindowWidth = this.Width;
+            Settings.Default.WindowHeight = this.Height;
+
+            // Save the settings
+            Settings.Default.Save();
+            mToolkit.UnloadTools();
         }
 
         /// <summary>
@@ -39,8 +78,8 @@ namespace mToolkitPlatformDesktopLauncher
         /// <param name="tool">The mTool instance to be added.</param>
         private void AddTool(mTool tool)
         {
-            tool.Log.Debug("Adding mTool to the framework Main Window.");
-            UserControl control = Toolkit.Tools.UIs[tool.GUID];
+            tool.CurrentLog.Debug("Adding mTool to the framework Main Window.");
+            UserControl control = mToolkit.Tools.UIs[tool.GUID];
 
             TabItem newTab = CreateTabItem(tool, control);
             ToolsTabControl.Items.Add(newTab);
@@ -62,9 +101,12 @@ namespace mToolkitPlatformDesktopLauncher
                 });
             }
 
-            tool.Log.Debug("Context menu created.");
+            tool.CurrentLog.Debug("Context menu created.");
         }
 
+        /// <summary>
+        /// Creates a TabItem with the specified tool and control.
+        /// </summary>
         private TabItem CreateTabItem(mTool tool, UserControl control)
         {
             Grid grid = new Grid
@@ -78,25 +120,33 @@ namespace mToolkitPlatformDesktopLauncher
 
             grid.Children.Add(control);
 
-            tool.Log.Debug("Created and set in Main Window grid.");
+            tool.CurrentLog.Debug("Created and set in Main Window grid.");
 
             return new TabItem
             {
-                Header = tool.ParentDirectory.Name,
+                Header = tool.CurrentParentDirectory.Name,
                 Content = grid
             };
         }
 
+        /// <summary>
+        /// Updates the main window title based on the current tab.
+        /// </summary>
         private void UpdateMainWindow(TabItem tab)
         {
             Title = $"{tab.Header} - mTool Framework";
         }
 
+        /// <summary>
+        /// Updates the context menu based on the control and tool provided.
+        /// </summary>
+        /// <param name="control">The UserControl instance associated with the tool.</param>
+        /// <param name="tool">The mTool instance.</param>
         private void UpdateContextMenu(UserControl? control, mTool? tool)
         {
             ContextMenu = new ContextMenu();
 
-            /*if (control?.ContextMenu != null)
+            if (control?.ContextMenu != null)
             {
                 foreach (MenuItem item in control.ContextMenu.Items)
                 {
@@ -104,14 +154,13 @@ namespace mToolkitPlatformDesktopLauncher
                 }
 
                 ContextMenu.Items.Add(new Separator());
-            }*/
-
+            }
 
             MenuItem toolSubmenu = new MenuItem()
             {
                 Header = "Framework Menu"
             };
-            toolSubmenu.Items.Add(CreateMenuItem("Restart mToolkit Platform", (sender, e) => mToolkitPlatform.Desktop.App.Restart()));
+            toolSubmenu.Items.Add(CreateMenuItem("Restart mToolkit Platform", (sender, e) => mFrameworkDesktop.Restart()));
             toolSubmenu.Items.Add(new Separator());
             toolSubmenu.Items.Add(CreateMenuItem("Install Tool From Repo...", (sender, e) => new WindowToolRepoInstaller().ShowDialog()));
 
@@ -125,6 +174,10 @@ namespace mToolkitPlatformDesktopLauncher
             ContextMenu.Items.Add(toolSubmenu);
         }
 
+        /// <summary>
+        /// Unloads the specified tool from the main window.
+        /// </summary>
+        /// <param name="tool">The mTool instance to be unloaded.</param>
         private void UnloadTool(mTool tool)
         {
             TabItem owner = (TabItem)ToolsTabControl.SelectedItem;
@@ -132,7 +185,7 @@ namespace mToolkitPlatformDesktopLauncher
             if (owner != null)
             {
                 Grid grid = (Grid)owner.Content;
-                UserControl ui = Toolkit.Tools.UIs[tool.GUID];
+                UserControl ui = mToolkit.Tools.UIs[tool.GUID];
 
                 grid.Children.Remove(ui);
                 ContextMenu.Items.Clear();
@@ -141,7 +194,7 @@ namespace mToolkitPlatformDesktopLauncher
                 ContextMenu = null;
                 owner.ContextMenu = null;
 
-                Toolkit.UnloadTool(tool);
+                mToolkit.UnloadTool(tool);
                 ToolsTabControl.Items.Remove(owner);
 
                 if (ToolsTabControl.Items.Count > 0)
@@ -155,6 +208,12 @@ namespace mToolkitPlatformDesktopLauncher
             }
         }
 
+        /// <summary>
+        /// Creates a MenuItem with the specified header and click event callback.
+        /// </summary>
+        /// <param name="header">The header text for the menu item.</param>
+        /// <param name="callback">The RoutedEventHandler to be invoked when the menu item is clicked.</param>
+        /// <returns>A new MenuItem instance.</returns>
         private MenuItem CreateMenuItem(string header, RoutedEventHandler callback)
         {
             MenuItem item = new MenuItem

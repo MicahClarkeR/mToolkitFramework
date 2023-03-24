@@ -1,4 +1,5 @@
 ﻿using mToolkitPlatform.Desktop;
+using mToolkitPlatformComponentLibrary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -55,7 +56,7 @@ namespace mToolkitPlatformDesktopLauncher.App.Windows
 
             if((bool) AutoRestart.IsChecked)
             {
-                mToolkitPlatform.Desktop.App.Restart();
+                mFrameworkDesktop.Restart();
             }
         }
 

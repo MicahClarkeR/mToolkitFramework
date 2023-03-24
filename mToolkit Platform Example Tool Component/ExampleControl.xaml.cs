@@ -33,7 +33,7 @@ namespace mToolkitPlatformExampleToolComponent
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Label.Content = "I have changed!";
-            Owner?.Log.Info("Changing label text.");
+            Owner?.CurrentLog.Info("Changing label text.");
         }
 
         internal void Close()
